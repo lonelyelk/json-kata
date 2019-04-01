@@ -125,40 +125,40 @@ parse_test() ->
     [] = parse(" \n{ \t}"),
     [{"key", "value"}] = parse("{\"key\": \"value\"}"),
     [{"key", "value"}, {"key2", "value2"}] = parse("{\"key\": \"value\",\n\"key2\": \"value2\"}"),
-    ok = try parse("{\"key\": \"value\",}"), error(should_fail)
+    ok = try parse("{\"key\": \"value\",}")
     catch
         error:bad_json -> ok
     end,
-    ok = try parse("{\"key\": \"value\",\n\"key2\": \"value2\",}"), error(should_fail)
+    ok = try parse("{\"key\": \"value\",\n\"key2\": \"value2\",}")
     catch
         error:bad_json -> ok
     end,
-    ok = try parse("{\"key\": "), error(should_fail)
+    ok = try parse("{\"key\": ")
     catch
         error:bad_json -> ok
     end,
-    ok = try parse("{\"key\": \""), error(should_fail)
+    ok = try parse("{\"key\": \"")
     catch
         error:bad_json -> ok
     end,
-    ok = try parse("{\"key\": \"\""), error(should_fail)
+    ok = try parse("{\"key\": \"\"")
     catch
         error:bad_json -> ok
     end,
     [{"obj", [{"key1", "value1"}, {"obj2", [{"key2", "value2"}]}]}, {"key3", "value3"}] =
         parse("{\"obj\": {\"key1\": \"value1\", \"obj2\": {\"key2\": \"value2\"}}, \"key3\": \"value3\"}"),
-    ok = try parse("{\"key\": \"value\"\"key2\": \"value2\"}"), error(should_fail)
+    ok = try parse("{\"key\": \"value\"\"key2\": \"value2\"}")
     catch
         error:bad_json -> ok
     end,
-    ok = try parse("{,\"key\": \"value\"}"), error(should_fail)
+    ok = try parse("{,\"key\": \"value\"}")
     catch
         error:bad_json -> ok
     end,
     [{"key", true}] = parse("{\"key\": true}"),
     [{"key", false}] = parse("{\"key\": false}"),
     [{"key", null}] = parse("{\"key\": null}"),
-    ok = try parse("{\"key\": \"value\"}{}"), error(should_fail)
+    ok = try parse("{\"key\": \"value\"}{}")
     catch
         error:bad_json -> ok
     end
@@ -170,24 +170,24 @@ string_test() ->
     {"❤", ""} = parse_string("❤\"", ""),
     {"ü", ""} = parse_string("\\u00fc\"", ""),
     {"❤", ""} = parse_string("\\u2764\"", ""),
-    ok = try parse_string("\\uvbnm\"", ""), error(should_fail)
+    ok = try parse_string("\\uvbnm\"", "")
     catch
         error:bad_json -> ok
     end,
-    ok = try parse_string("\\uf\"", ""), error(should_fail)
+    ok = try parse_string("\\uf\"", "")
     catch
         error:bad_json -> ok
     end,
     {"𝄞", ""} = parse_string("\\ud834\\udd1e\"", ""),
-    ok = try parse_string("\\ud834\"", ""), error(should_fail)
+    ok = try parse_string("\\ud834\"", "")
     catch
         error:bad_json -> ok
     end,
-    ok = try parse_string("\\ud834\\uqqqq\"", ""), error(should_fail)
+    ok = try parse_string("\\ud834\\uqqqq\"", "")
     catch
         error:bad_json -> ok
     end,
-    ok = try parse_string("\\ud834\\ueeee\"", ""), error(should_fail)
+    ok = try parse_string("\\ud834\\ueeee\"", "")
     catch
         error:bad_json -> ok
     end
