@@ -14,3 +14,5 @@ This is a personal exercise repository, where I learn programming languages by w
 - [ ] Number
 - [ ] Array
 - [ ] Error position
+- [ ] Handle non-unique keys
+- [ ] Restrict unescaped characters within string
