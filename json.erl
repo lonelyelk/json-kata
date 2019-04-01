@@ -89,25 +89,24 @@ parse_string(L, Str) ->
         [$\\, $t | Tail] -> % tab
             parse_string(Tail, [$\t | Str]);
         [$\\, $u, A, B, C, D | Tail] -> % \u0000
-            try list_to_integer([A, B, C, D], 16) of
-                SurrogateHigh when SurrogateHigh >= 16#d800, SurrogateHigh =< 16#dbff ->
-                    try [$\\, $u, E, F, G, H | NewTail] = Tail,
+            try
+                case list_to_integer([A, B, C, D], 16) of
+                    SurrogateHigh when SurrogateHigh >= 16#d800, SurrogateHigh =< 16#dbff ->
+                        [$\\, $u, E, F, G, H | NewTail] = Tail,
                         case list_to_integer([E, F, G, H], 16) of
                             SurrogateLow when SurrogateLow >= 16#dc00, SurrogateLow =< 16#dfff ->
                                 Utf16 = ((SurrogateHigh - 16#d800) bsl 10) + SurrogateLow - 16#dc00 + 16#10000,
                                 parse_string(NewTail, [Utf16 | Str]);
                             _ ->
                                 error(bad_json)
-                        end
-                    catch
-                        error:{badmatch, _} -> error(bad_json);
-                        error:badarg -> error(bad_json)
-                    end;
-                Utf8 when Utf8 =< 16#d7ff; Utf8 >= 16#e000 ->
-                    parse_string(Tail, [Utf8 | Str]);
-                _ ->
-                    error(bad_json)
+                        end;
+                    Utf8 when Utf8 =< 16#d7ff; Utf8 >= 16#e000 ->
+                        parse_string(Tail, [Utf8 | Str]);
+                    _ ->
+                        error(bad_json)
+                end
             catch
+                error:{badmatch, _} -> error(bad_json);
                 error:badarg -> error(bad_json)
             end;
         [$\\, $u | _] -> % \uX<4
