@@ -133,7 +133,15 @@ parse_test() ->
     catch
         error:bad_json -> ok
     end,
+    ok = try parse("{\"key\": "), error(should_fail)
+    catch
+        error:bad_json -> ok
+    end,
     ok = try parse("{\"key\": \""), error(should_fail)
+    catch
+        error:bad_json -> ok
+    end,
+    ok = try parse("{\"key\": \"\""), error(should_fail)
     catch
         error:bad_json -> ok
     end,
