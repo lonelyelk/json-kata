@@ -75,6 +75,13 @@ parse_object_value(L, Key, Acc) ->
             parse_object_comma_or_close(Tail, [{Key, false} | Acc]);
         [$n, $u, $l, $l | Tail] ->
             parse_object_comma_or_close(Tail, [{Key, null} | Acc]);
+        [$[ | Tail] ->
+            case parse_array_value_or_close(Tail, []) of
+                {NewTail, Value} ->
+                    parse_object_comma_or_close(NewTail, [{Key, Value} | Acc]);
+                _ ->
+                    error(bad_json)
+            end;
         _ ->
             error(bad_json)
     end.
@@ -94,7 +101,7 @@ parse_array_value_or_close(L, Acc) ->
         [$] | []] ->
             lists:reverse(Acc);
         [$] | Tail] ->
-            {Tail, Acc};
+            {Tail, lists:reverse(Acc)};
         [${ | Tail] ->
             case parse_object_key_or_close(Tail, []) of
                 {NewTail, Obj} ->
@@ -113,7 +120,7 @@ parse_array_comma_or_close(L, Acc) ->
         [$] | []] ->
             lists:reverse(Acc);
         [$] | Tail] ->
-            {Tail, Acc};
+            {Tail, lists:reverse(Acc)};
         _ ->
             error(bad_json)
     end.
@@ -213,7 +220,8 @@ parse_test() ->
     ok = try parse("[]{}")
     catch
         error:bad_json -> ok
-    end
+    end,
+    [{"key", ["a", "b", [{"key", "value"}]]}] = parse("{\"key\": [\"a\", \"b\", {\"key\": \"value\"}]}")
 .
 
 string_test() ->
