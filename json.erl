@@ -92,6 +92,13 @@ parse_array_value_or_close(L, Acc) ->
             lists:reverse(Acc);
         [$] | Tail] ->
             {Tail, Acc};
+        [${ | Tail] ->
+            case parse_object_key_or_close(Tail, []) of
+                {NewTail, Obj} ->
+                    parse_array_comma_or_close(NewTail, [Obj | Acc]);
+                _ ->
+                    error(bad_json)
+            end;
         _ ->
             error(bad_json)
     end.
@@ -198,7 +205,8 @@ parse_test() ->
     end,
     ["value", "value"] = parse("[\"value\", \"value\"]"),
     ["value", []] = parse("[\"value\", []]"),
-    ["value", ["a"], "value2"] = parse("[\"value\", [\"a\"], \"value2\"]")
+    ["value", ["a"], "value2"] = parse("[\"value\", [\"a\"], \"value2\"]"),
+    ["a", ["b"], [{"key", "value"}], [], "c"] = parse("[\"a\", [\"b\"], {\"key\": \"value\"}, {}, \"c\"]")
 .
 
 string_test() ->
