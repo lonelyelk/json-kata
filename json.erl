@@ -10,7 +10,10 @@ parse(L) when is_list(L) ->
                 Res -> Res
             end;
         [$[ | Tail] ->
-            parse_array_value_or_close(Tail, []);
+            case parse_array_value_or_close(Tail, []) of
+                {_, _} -> error(bad_json);
+                Res -> Res
+            end;
         _ ->
             error(bad_json)
     end.
@@ -206,7 +209,11 @@ parse_test() ->
     ["value", "value"] = parse("[\"value\", \"value\"]"),
     ["value", []] = parse("[\"value\", []]"),
     ["value", ["a"], "value2"] = parse("[\"value\", [\"a\"], \"value2\"]"),
-    ["a", ["b"], [{"key", "value"}], [], "c"] = parse("[\"a\", [\"b\"], {\"key\": \"value\"}, {}, \"c\"]")
+    ["a", ["b"], [{"key", "value"}], [], "c"] = parse("[\"a\", [\"b\"], {\"key\": \"value\"}, {}, \"c\"]"),
+    ok = try parse("[]{}")
+    catch
+        error:bad_json -> ok
+    end
 .
 
 string_test() ->
