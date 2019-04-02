@@ -9,6 +9,8 @@ parse(L) when is_list(L) ->
                 {_, _} -> error(bad_json);
                 Res -> Res
             end;
+        [$[ | Tail] ->
+            parse_array_value_or_close(Tail, []);
         _ ->
             error(bad_json)
     end.
@@ -70,6 +72,27 @@ parse_object_value(L, Key, Acc) ->
             parse_object_comma_or_close(Tail, [{Key, false} | Acc]);
         [$n, $u, $l, $l | Tail] ->
             parse_object_comma_or_close(Tail, [{Key, null} | Acc]);
+        _ ->
+            error(bad_json)
+    end.
+
+parse_array_value_or_close(L, Acc) ->
+    case string:trim(L, both, [16#20, $\t, $\n, $\r]) of
+        [$" | Tail] ->
+            {Value, NewTail} = parse_string(Tail, ""),
+            parse_array_comma_or_close(NewTail, [Value | Acc]);
+        [$] | _] ->
+            Acc;
+        _ ->
+            error(bad_json)
+    end.
+
+parse_array_comma_or_close(L, Acc) ->
+    case string:trim(L, both, [16#20, $\t, $\n, $\r]) of
+        [$, | Tail] ->
+            parse_array_value_or_close(Tail, Acc);
+        [$] | _] ->
+            Acc;
         _ ->
             error(bad_json)
     end.
@@ -161,7 +184,8 @@ parse_test() ->
     ok = try parse("{\"key\": \"value\"}{}")
     catch
         error:bad_json -> ok
-    end
+    end,
+    ["value", "value"] = parse("[\"value\", \"value\"]")
 .
 
 string_test() ->
