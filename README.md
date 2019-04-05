@@ -11,7 +11,7 @@ This is a personal exercise repository, where I learn programming languages by w
 - [x] Utf8
 - [x] Utf16
 - [x] Boolean and `null`
-- [ ] Number
+- [x] Number
 - [x] Array
 - [ ] Error position
 - [ ] Handle non-unique keys

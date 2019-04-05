@@ -100,8 +100,15 @@ parse_value(L) ->
                     case re:run(Str, "^-?[1-9]\\d*(\\.\\d+)?(e[+-]?\\d+)?", [caseless]) of
                         {match, [{0, Len}]} ->
                             {list_to_integer(lists:sublist(Str, Len)), lists:nthtail(Len, Str)};
-                        {match, [{0, _}, {-1,0} | _]} ->
-                            error(bad_json);
+                        {match, [{0, Len}, {-1,0}, {PosE, LenE}]} ->
+                            try string:to_float(lists:sublist(Str, PosE) ++ ".0" ++ lists:sublist(Str, PosE+1, LenE)) of
+                                {F, _} ->
+                                    {F, lists:nthtail(Len, Str)};
+                                _ ->
+                                    error(bad_json)
+                            catch
+                                error:badarg -> error(bad_json)
+                            end;
                         {match, [{0, Len} | _]} ->
                             try string:to_float(lists:sublist(Str, Len)) of
                                 {F, _} ->
@@ -119,7 +126,7 @@ parse_value(L) ->
 
 parse_string(L, Str) ->
     case L of
-        "" ->
+        [] ->
             error(bad_json);
         [$\\, $b | Tail] -> % backspace
             parse_string(Tail, [$\b | Str]);
@@ -224,7 +231,16 @@ parse_test() ->
     [{"key", ["a", "b", [{"key", "value"}]]}] = parse("{\"key\": [\"a\", \"b\", {\"key\": \"value\"}]}"),
     [true, false, null] = parse("[true, false, null]"),
     [{"a", 10}, {"b", [10, -20]}] = parse("{\"a\": 10, \"b\": [10, -20]}"),
-    [{"a", 0.12}, {"b", [10.234, -2.023e201]}] = parse("{\"a\": 0.12, \"b\": [10.234, -20.23E+200]}")
+    [{"a", 0.12}, {"b", [10.234, -2.023e201]}] = parse("{\"a\": 0.12, \"b\": [10.234, -20.23E+200]}"),
+    0.02 = parse("2e-2"),
+    ok = try parse("010")
+    catch
+        error:bad_json -> ok
+    end,
+    ok = try parse("0.10.10")
+    catch
+        error:bad_json -> ok
+    end
 .
 
 string_test() ->
