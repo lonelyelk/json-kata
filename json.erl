@@ -85,8 +85,16 @@ parse_value(L) ->
             {false, Tail};
         [$n, $u, $l, $l | Tail] ->
             {null, Tail};
-        _ ->
-            error(bad_json)
+        Str ->
+            case re:run(Str, "^-?\\d+") of
+                {match, [{0, Len}]} ->
+                    try {list_to_integer(lists:sublist(Str, Len)), lists:nthtail(Len, Str)}
+                    catch
+                        error:badarg -> error(bad_json)
+                    end;
+                nomatch ->
+                    error(bad_json)
+            end
     end.
 
 parse_string(L, Str) ->
@@ -194,7 +202,8 @@ parse_test() ->
         error:bad_json -> ok
     end,
     [{"key", ["a", "b", [{"key", "value"}]]}] = parse("{\"key\": [\"a\", \"b\", {\"key\": \"value\"}]}"),
-    [true, false, null] = parse("[true, false, null]")
+    [true, false, null] = parse("[true, false, null]"),
+    [{"a", 10}, {"b", [10, -20]}] = parse("{\"a\": 10, \"b\": [10, -20]}")
 .
 
 string_test() ->
