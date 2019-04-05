@@ -31,8 +31,8 @@ parse_object_comma_or_close(L, Acc) ->
 parse_object_key_only(L, Acc) ->
     case string:trim(L, both, [16#20, $\t, $\n, $\r]) of
         [$" | Tail] ->
-            {Key, NewTail} = parse_string(Tail, ""),
-            parse_object_separator(NewTail, Key, Acc);
+            {Key, NewL} = parse_string(Tail, ""),
+            parse_object_separator(NewL, Key, Acc);
         _ ->
             error(bad_json)
     end.
@@ -46,8 +46,8 @@ parse_object_separator(L, Key, Acc) ->
     end.
 
 parse_object_value(L, Key, Acc) ->
-    {Value, NewTail} = parse_value(L),
-    parse_object_comma_or_close(NewTail, [{Key, Value} | Acc]).
+    {Value, NewL} = parse_value(L),
+    parse_object_comma_or_close(NewL, [{Key, Value} | Acc]).
 
 parse_array_value_or_close(L, Acc) ->
     case string:trim(L, both, [16#20, $\t, $\n, $\r]) of
@@ -58,8 +58,8 @@ parse_array_value_or_close(L, Acc) ->
     end.
 
 parse_array_value_only(L, Acc) ->
-    {Value, NewTail} = parse_value(L),
-    parse_array_comma_or_close(NewTail, [Value | Acc]).
+    {Value, NewL} = parse_value(L),
+    parse_array_comma_or_close(NewL, [Value | Acc]).
 
 parse_array_comma_or_close(L, Acc) ->
     case string:trim(L, both, [16#20, $\t, $\n, $\r]) of
