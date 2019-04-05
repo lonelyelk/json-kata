@@ -17,3 +17,4 @@ This is a personal exercise repository, where I learn programming languages by w
 - [ ] Handle non-unique keys
 - [ ] Restrict unescaped characters within string
 - [ ] Difference between empty array and empty object – difference between arrays and objects
+- [ ] Implement parsing to maps
