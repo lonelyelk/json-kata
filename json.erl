@@ -58,104 +58,59 @@ parse_object_separator(L, Key, Acc) ->
     end.
 
 parse_object_value(L, Key, Acc) ->
-    case string:trim(L, both, [16#20, $\t, $\n, $\r]) of
-        [$" | Tail] ->
-            {Value, NewTail} = parse_string(Tail, ""),
-            parse_object_comma_or_close(NewTail, [{Key, Value} | Acc]);
-        [${ | Tail] ->
-            case parse_object_key_or_close(Tail, []) of
-                {Value, NewTail} ->
-                    parse_object_comma_or_close(NewTail, [{Key, Value} | Acc]);
-                _ ->
-                    error(bad_json)
-            end;
-        [$[ | Tail] ->
-            case parse_array_value_or_close(Tail, []) of
-                {Value, NewTail} ->
-                    parse_object_comma_or_close(NewTail, [{Key, Value} | Acc]);
-                _ ->
-                    error(bad_json)
-            end;
-        [$t, $r, $u, $e | Tail] ->
-            parse_object_comma_or_close(Tail, [{Key, true} | Acc]);
-        [$f, $a, $l, $s, $e | Tail] ->
-            parse_object_comma_or_close(Tail, [{Key, false} | Acc]);
-        [$n, $u, $l, $l | Tail] ->
-            parse_object_comma_or_close(Tail, [{Key, null} | Acc]);
-        _ ->
-            error(bad_json)
-    end.
+    {Value, NewTail} = parse_value(L),
+    parse_object_comma_or_close(NewTail, [{Key, Value} | Acc]).
 
 parse_array_value_or_close(L, Acc) ->
     case string:trim(L, both, [16#20, $\t, $\n, $\r]) of
-        [$" | Tail] ->
-            {Value, NewTail} = parse_string(Tail, ""),
-            parse_array_comma_or_close(NewTail, [Value | Acc]);
-        [$[ | Tail] ->
-            case parse_array_value_or_close(Tail, []) of
-                {Arr, NewTail} ->
-                    parse_array_comma_or_close(NewTail, [Arr | Acc]);
-                _ ->
-                    error(bad_json)
-            end;
         [$] | []] ->
             lists:reverse(Acc);
         [$] | Tail] ->
             {lists:reverse(Acc), Tail};
-        [${ | Tail] ->
-            case parse_object_key_or_close(Tail, []) of
-                {Obj, NewTail} ->
-                    parse_array_comma_or_close(NewTail, [Obj | Acc]);
-                _ ->
-                    error(bad_json)
-            end;
-        [$t, $r, $u, $e | Tail] ->
-            parse_array_comma_or_close(Tail, [true | Acc]);
-        [$f, $a, $l, $s, $e | Tail] ->
-            parse_array_comma_or_close(Tail, [false | Acc]);
-        [$n, $u, $l, $l | Tail] ->
-            parse_array_comma_or_close(Tail, [null | Acc]);
         _ ->
-            error(bad_json)
+            parse_array_value_only(L, Acc)
     end.
 
 parse_array_value_only(L, Acc) ->
+    {Value, NewTail} = parse_value(L),
+    parse_array_comma_or_close(NewTail, [Value | Acc]).
+
+parse_array_comma_or_close(L, Acc) ->
+    case string:trim(L, both, [16#20, $\t, $\n, $\r]) of
+        [$] | []] ->
+            lists:reverse(Acc);
+        [$] | Tail] ->
+            {lists:reverse(Acc), Tail};
+        [$, | Tail] ->
+            parse_array_value_only(Tail, Acc);
+        _ ->
+            error(bad_json)
+    end.
+
+parse_value(L) ->
     case string:trim(L, both, [16#20, $\t, $\n, $\r]) of
         [$" | Tail] ->
-            {Value, NewTail} = parse_string(Tail, ""),
-            parse_array_comma_or_close(NewTail, [Value | Acc]);
+            parse_string(Tail, "");
         [$[ | Tail] ->
             case parse_array_value_or_close(Tail, []) of
                 {Arr, NewTail} ->
-                    parse_array_comma_or_close(NewTail, [Arr | Acc]);
+                    {Arr, NewTail};
                 _ ->
                     error(bad_json)
             end;
         [${ | Tail] ->
             case parse_object_key_or_close(Tail, []) of
                 {Obj, NewTail} ->
-                    parse_array_comma_or_close(NewTail, [Obj | Acc]);
+                    {Obj, NewTail};
                 _ ->
                     error(bad_json)
             end;
         [$t, $r, $u, $e | Tail] ->
-            parse_array_comma_or_close(Tail, [true | Acc]);
+            {true, Tail};
         [$f, $a, $l, $s, $e | Tail] ->
-            parse_array_comma_or_close(Tail, [false | Acc]);
+            {false, Tail};
         [$n, $u, $l, $l | Tail] ->
-            parse_array_comma_or_close(Tail, [null | Acc]);
-        _ ->
-            error(bad_json)
-    end.
-
-parse_array_comma_or_close(L, Acc) ->
-    case string:trim(L, both, [16#20, $\t, $\n, $\r]) of
-        [$, | Tail] ->
-            parse_array_value_only(Tail, Acc);
-        [$] | []] ->
-            lists:reverse(Acc);
-        [$] | Tail] ->
-            {lists:reverse(Acc), Tail};
+            {null, Tail};
         _ ->
             error(bad_json)
     end.
