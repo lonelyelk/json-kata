@@ -86,14 +86,34 @@ parse_value(L) ->
         [$n, $u, $l, $l | Tail] ->
             {null, Tail};
         Str ->
-            case re:run(Str, "^-?\\d+") of
-                {match, [{0, Len}]} ->
-                    try {list_to_integer(lists:sublist(Str, Len)), lists:nthtail(Len, Str)}
+            case re:run(Str, "^-?0\\.\\d+(e\\d+)?", [caseless]) of
+                {match, [{0, Len}| _]} ->
+                    try string:to_float(lists:sublist(Str, Len)) of
+                        {F, _} ->
+                            {F, lists:nthtail(Len, Str)};
+                        _ ->
+                            error(bad_json)
                     catch
                         error:badarg -> error(bad_json)
                     end;
                 nomatch ->
-                    error(bad_json)
+                    case re:run(Str, "^-?[1-9]\\d*(\\.\\d+)?(e[+-]?\\d+)?", [caseless]) of
+                        {match, [{0, Len}]} ->
+                            {list_to_integer(lists:sublist(Str, Len)), lists:nthtail(Len, Str)};
+                        {match, [{0, _}, {-1,0} | _]} ->
+                            error(bad_json);
+                        {match, [{0, Len} | _]} ->
+                            try string:to_float(lists:sublist(Str, Len)) of
+                                {F, _} ->
+                                    {F, lists:nthtail(Len, Str)};
+                                _ ->
+                                    error(bad_json)
+                            catch
+                                error:badarg -> error(bad_json)
+                            end;
+                        nomatch ->
+                            error(bad_json)
+                    end
             end
     end.
 
@@ -203,7 +223,8 @@ parse_test() ->
     end,
     [{"key", ["a", "b", [{"key", "value"}]]}] = parse("{\"key\": [\"a\", \"b\", {\"key\": \"value\"}]}"),
     [true, false, null] = parse("[true, false, null]"),
-    [{"a", 10}, {"b", [10, -20]}] = parse("{\"a\": 10, \"b\": [10, -20]}")
+    [{"a", 10}, {"b", [10, -20]}] = parse("{\"a\": 10, \"b\": [10, -20]}"),
+    [{"a", 0.12}, {"b", [10.234, -2.023e201]}] = parse("{\"a\": 0.12, \"b\": [10.234, -20.23E+200]}")
 .
 
 string_test() ->
