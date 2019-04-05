@@ -42,7 +42,7 @@ parse_object_comma_or_close(L, Acc) ->
 
 parse_object_key_only(L, Acc) ->
     case string:trim(L, both, [16#20, $\t, $\n, $\r]) of
-        [$" | Tail] -> % "
+        [$" | Tail] ->
             {Key, NewTail} = parse_string(Tail, ""),
             parse_object_separator(NewTail, Key, Acc);
         _ ->
