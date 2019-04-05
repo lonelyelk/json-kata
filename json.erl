@@ -143,14 +143,8 @@ parse_number(L) ->
                 {match, [{0, Len}]} ->
                     {list_to_integer(lists:sublist(L, Len)), lists:nthtail(Len, L)};
                 {match, [{0, Len}, {-1,0}, {PosE, LenE}]} ->
-                    try string:to_float(lists:sublist(L, PosE) ++ ".0" ++ lists:sublist(L, PosE+1, LenE)) of
-                        {F, _} ->
-                            {F, lists:nthtail(Len, L)};
-                        _ ->
-                            error(bad_json)
-                    catch
-                        error:badarg -> error(bad_json)
-                    end;
+                    {F, _} = string:to_float(lists:sublist(L, PosE) ++ ".0" ++ lists:sublist(L, PosE+1, LenE)),
+                    {F, lists:nthtail(Len, L)};
                 {match, [{0, Len} | _]} ->
                     parse_float_match(L, Len);
                 nomatch ->
@@ -159,14 +153,8 @@ parse_number(L) ->
     end.
 
 parse_float_match(L, Len) ->
-    try string:to_float(lists:sublist(L, Len)) of
-        {F, _} ->
-            {F, lists:nthtail(Len, L)};
-        _ ->
-            error(bad_json)
-    catch
-        error:badarg -> error(bad_json)
-    end.
+    {F, _} = string:to_float(lists:sublist(L, Len)),
+    {F, lists:nthtail(Len, L)}.
 
 parse_test() ->
     [] = parse("{}"),
@@ -237,6 +225,10 @@ parse_test() ->
         error:bad_json -> ok
     end,
     ok = try parse("0.10.10")
+    catch
+        error:bad_json -> ok
+    end,
+    ok = try parse("10B")
     catch
         error:bad_json -> ok
     end
