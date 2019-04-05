@@ -69,12 +69,6 @@ parse_object_value(L, Key, Acc) ->
                 _ ->
                     error(bad_json)
             end;
-        [$t, $r, $u, $e | Tail] ->
-            parse_object_comma_or_close(Tail, [{Key, true} | Acc]);
-        [$f, $a, $l, $s, $e | Tail] ->
-            parse_object_comma_or_close(Tail, [{Key, false} | Acc]);
-        [$n, $u, $l, $l | Tail] ->
-            parse_object_comma_or_close(Tail, [{Key, null} | Acc]);
         [$[ | Tail] ->
             case parse_array_value_or_close(Tail, []) of
                 {NewTail, Value} ->
@@ -82,6 +76,12 @@ parse_object_value(L, Key, Acc) ->
                 _ ->
                     error(bad_json)
             end;
+        [$t, $r, $u, $e | Tail] ->
+            parse_object_comma_or_close(Tail, [{Key, true} | Acc]);
+        [$f, $a, $l, $s, $e | Tail] ->
+            parse_object_comma_or_close(Tail, [{Key, false} | Acc]);
+        [$n, $u, $l, $l | Tail] ->
+            parse_object_comma_or_close(Tail, [{Key, null} | Acc]);
         _ ->
             error(bad_json)
     end.
@@ -109,6 +109,12 @@ parse_array_value_or_close(L, Acc) ->
                 _ ->
                     error(bad_json)
             end;
+        [$t, $r, $u, $e | Tail] ->
+            parse_array_comma_or_close(Tail, [true | Acc]);
+        [$f, $a, $l, $s, $e | Tail] ->
+            parse_array_comma_or_close(Tail, [false | Acc]);
+        [$n, $u, $l, $l | Tail] ->
+            parse_array_comma_or_close(Tail, [null | Acc]);
         _ ->
             error(bad_json)
     end.
@@ -132,6 +138,12 @@ parse_array_value_only(L, Acc) ->
                 _ ->
                     error(bad_json)
             end;
+        [$t, $r, $u, $e | Tail] ->
+            parse_array_comma_or_close(Tail, [true | Acc]);
+        [$f, $a, $l, $s, $e | Tail] ->
+            parse_array_comma_or_close(Tail, [false | Acc]);
+        [$n, $u, $l, $l | Tail] ->
+            parse_array_comma_or_close(Tail, [null | Acc]);
         _ ->
             error(bad_json)
     end.
@@ -252,7 +264,8 @@ parse_test() ->
     catch
         error:bad_json -> ok
     end,
-    [{"key", ["a", "b", [{"key", "value"}]]}] = parse("{\"key\": [\"a\", \"b\", {\"key\": \"value\"}]}")
+    [{"key", ["a", "b", [{"key", "value"}]]}] = parse("{\"key\": [\"a\", \"b\", {\"key\": \"value\"}]}"),
+    [true, false, null] = parse("[true, false, null]")
 .
 
 string_test() ->
