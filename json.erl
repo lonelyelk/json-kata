@@ -34,7 +34,7 @@ parse_object_comma_or_close(L, Acc) ->
             lists:reverse(Acc);
         [$} | Tail] ->
             {lists:reverse(Acc), Tail};
-        [$, | Tail] when length(Acc) > 0 ->
+        [$, | Tail] ->
             parse_object_key_only(Tail, Acc);
         _ ->
             error(bad_json)
