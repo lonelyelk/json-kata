@@ -23,7 +23,7 @@ parse_object_key_or_close(L, Acc) ->
         [$} | []] ->
             lists:reverse(Acc);
         [$} | Tail] ->
-            {Tail, lists:reverse(Acc)};
+            {lists:reverse(Acc), Tail};
         _ ->
             parse_object_key_only(L, Acc)
     end.
@@ -33,7 +33,7 @@ parse_object_comma_or_close(L, Acc) ->
         [$} | []] ->
             lists:reverse(Acc);
         [$} | Tail] ->
-            {Tail, lists:reverse(Acc)};
+            {lists:reverse(Acc), Tail};
         [$, | Tail] when length(Acc) > 0 ->
             parse_object_key_only(Tail, Acc);
         _ ->
@@ -64,14 +64,14 @@ parse_object_value(L, Key, Acc) ->
             parse_object_comma_or_close(NewTail, [{Key, Value} | Acc]);
         [${ | Tail] ->
             case parse_object_key_or_close(Tail, []) of
-                {NewTail, Value} ->
+                {Value, NewTail} ->
                     parse_object_comma_or_close(NewTail, [{Key, Value} | Acc]);
                 _ ->
                     error(bad_json)
             end;
         [$[ | Tail] ->
             case parse_array_value_or_close(Tail, []) of
-                {NewTail, Value} ->
+                {Value, NewTail} ->
                     parse_object_comma_or_close(NewTail, [{Key, Value} | Acc]);
                 _ ->
                     error(bad_json)
@@ -93,7 +93,7 @@ parse_array_value_or_close(L, Acc) ->
             parse_array_comma_or_close(NewTail, [Value | Acc]);
         [$[ | Tail] ->
             case parse_array_value_or_close(Tail, []) of
-                {NewTail, Arr} ->
+                {Arr, NewTail} ->
                     parse_array_comma_or_close(NewTail, [Arr | Acc]);
                 _ ->
                     error(bad_json)
@@ -101,10 +101,10 @@ parse_array_value_or_close(L, Acc) ->
         [$] | []] ->
             lists:reverse(Acc);
         [$] | Tail] ->
-            {Tail, lists:reverse(Acc)};
+            {lists:reverse(Acc), Tail};
         [${ | Tail] ->
             case parse_object_key_or_close(Tail, []) of
-                {NewTail, Obj} ->
+                {Obj, NewTail} ->
                     parse_array_comma_or_close(NewTail, [Obj | Acc]);
                 _ ->
                     error(bad_json)
@@ -126,14 +126,14 @@ parse_array_value_only(L, Acc) ->
             parse_array_comma_or_close(NewTail, [Value | Acc]);
         [$[ | Tail] ->
             case parse_array_value_or_close(Tail, []) of
-                {NewTail, Arr} ->
+                {Arr, NewTail} ->
                     parse_array_comma_or_close(NewTail, [Arr | Acc]);
                 _ ->
                     error(bad_json)
             end;
         [${ | Tail] ->
             case parse_object_key_or_close(Tail, []) of
-                {NewTail, Obj} ->
+                {Obj, NewTail} ->
                     parse_array_comma_or_close(NewTail, [Obj | Acc]);
                 _ ->
                     error(bad_json)
@@ -155,7 +155,7 @@ parse_array_comma_or_close(L, Acc) ->
         [$] | []] ->
             lists:reverse(Acc);
         [$] | Tail] ->
-            {Tail, lists:reverse(Acc)};
+            {lists:reverse(Acc), Tail};
         _ ->
             error(bad_json)
     end.
