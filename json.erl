@@ -85,43 +85,8 @@ parse_value(L) ->
             {false, Tail};
         [$n, $u, $l, $l | Tail] ->
             {null, Tail};
-        Str ->
-            case re:run(Str, "^-?0\\.\\d+(e\\d+)?", [caseless]) of
-                {match, [{0, Len}| _]} ->
-                    try string:to_float(lists:sublist(Str, Len)) of
-                        {F, _} ->
-                            {F, lists:nthtail(Len, Str)};
-                        _ ->
-                            error(bad_json)
-                    catch
-                        error:badarg -> error(bad_json)
-                    end;
-                nomatch ->
-                    case re:run(Str, "^-?[1-9]\\d*(\\.\\d+)?(e[+-]?\\d+)?", [caseless]) of
-                        {match, [{0, Len}]} ->
-                            {list_to_integer(lists:sublist(Str, Len)), lists:nthtail(Len, Str)};
-                        {match, [{0, Len}, {-1,0}, {PosE, LenE}]} ->
-                            try string:to_float(lists:sublist(Str, PosE) ++ ".0" ++ lists:sublist(Str, PosE+1, LenE)) of
-                                {F, _} ->
-                                    {F, lists:nthtail(Len, Str)};
-                                _ ->
-                                    error(bad_json)
-                            catch
-                                error:badarg -> error(bad_json)
-                            end;
-                        {match, [{0, Len} | _]} ->
-                            try string:to_float(lists:sublist(Str, Len)) of
-                                {F, _} ->
-                                    {F, lists:nthtail(Len, Str)};
-                                _ ->
-                                    error(bad_json)
-                            catch
-                                error:badarg -> error(bad_json)
-                            end;
-                        nomatch ->
-                            error(bad_json)
-                    end
-            end
+        LTr ->
+            parse_number(LTr)
     end.
 
 parse_string(L, Str) ->
@@ -167,6 +132,40 @@ parse_string(L, Str) ->
             {lists:reverse(Str), Tail};
         [Chr | Tail] ->
             parse_string(Tail, [Chr | Str])
+    end.
+
+parse_number(L) ->
+    case re:run(L, "^-?0\\.\\d+(e\\d+)?", [caseless]) of
+        {match, [{0, Len}| _]} ->
+            parse_float_match(L, Len);
+        nomatch ->
+            case re:run(L, "^-?[1-9]\\d*(\\.\\d+)?(e[+-]?\\d+)?", [caseless]) of
+                {match, [{0, Len}]} ->
+                    {list_to_integer(lists:sublist(L, Len)), lists:nthtail(Len, L)};
+                {match, [{0, Len}, {-1,0}, {PosE, LenE}]} ->
+                    try string:to_float(lists:sublist(L, PosE) ++ ".0" ++ lists:sublist(L, PosE+1, LenE)) of
+                        {F, _} ->
+                            {F, lists:nthtail(Len, L)};
+                        _ ->
+                            error(bad_json)
+                    catch
+                        error:badarg -> error(bad_json)
+                    end;
+                {match, [{0, Len} | _]} ->
+                    parse_float_match(L, Len);
+                nomatch ->
+                    error(bad_json)
+            end
+    end.
+
+parse_float_match(L, Len) ->
+    try string:to_float(lists:sublist(L, Len)) of
+        {F, _} ->
+            {F, lists:nthtail(Len, L)};
+        _ ->
+            error(bad_json)
+    catch
+        error:badarg -> error(bad_json)
     end.
 
 parse_test() ->
