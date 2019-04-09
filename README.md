@@ -4,6 +4,7 @@ This is a personal exercise repository, where I learn programming languages by w
 
 ## Erlang
 
+- [x] Setup
 - [x] Whitespace
 - [x] Object
 - [x] String
@@ -18,3 +19,23 @@ This is a personal exercise repository, where I learn programming languages by w
 - [ ] Restrict unescaped characters within string
 - [ ] Difference between empty array and empty object – difference between arrays and objects
 - [ ] Implement parsing to maps
+- [ ] Split test cases from the module
+
+## Haskell
+
+- [ ] Setup
+- [ ] Whitespace
+- [ ] Object
+- [ ] String
+- [ ] Escapes
+- [ ] Utf8
+- [ ] Utf16
+- [ ] Boolean and `null`
+- [ ] Number
+- [ ] Array
+- [ ] Error position
+- [ ] Handle non-unique keys
+- [ ] Restrict unescaped characters within string
+- [ ] Difference between empty array and empty object – difference between arrays and objects
+- [ ] Implement parsing to maps
+- [ ] Split test cases from the module
