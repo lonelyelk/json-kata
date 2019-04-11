@@ -1,6 +1,5 @@
 import Data.List
 import Control.Monad
-import Test.HUnit
 
 solveRPN :: (Num a, Read a) => String -> a
 solveRPN = head . foldl foldingFunction [] . words
@@ -28,6 +27,22 @@ x -: f = f x
 banana :: Pole -> Maybe Pole
 banana _ = Nothing
 
+data Assertion a = Pass | Fail a deriving (Show)
 
-test1 = TestCase (assertEqual "for (foo 3)," (1,2) (1,2))
-tests = TestList [TestLabel "test1" test1]
+instance Functor Assertion where
+    fmap f Pass = Pass
+    fmap f (Fail a) = Fail (f a)
+
+instance Monoid a => Monoid (Assertion a) where
+    mempty = Pass
+
+instance Semigroup a => Semigroup (Assertion a) where
+    Pass <> Pass = Pass
+    Pass <> s = s
+    s <> Pass = s
+    Fail s1 <> Fail s2 = Fail (s1 <> s2)
+
+assertEqual :: (Eq b) => a -> b -> b -> Assertion a
+assertEqual msg val1 val2
+    | val1 == val2 = Pass
+    | otherwise = Fail msg
