@@ -3,13 +3,20 @@ module JSON (JSON(..), parseJSON) where
 import Text.Parsec
 import Text.Parsec.String
 
-data JSON = JSONString String deriving (Show, Eq)
+data JSON = JSONString String | JSONBool Bool deriving (Show, Eq)
 
 parseJSON :: String -> Either ParseError JSON
-parseJSON str = parse jsonVal "json" str
+parseJSON = parse jsonVal "json"
 
 jsonVal :: Parser JSON
-jsonVal = JSONString <$> between (char '"') (char '"') (many (noneOf "\"\\"))
+jsonVal = choice [jsonString, jsonBool]
+
+jsonString :: Parser JSON
+jsonString = JSONString <$> between (char '"') (char '"') (many (noneOf "\"\\"))
+
+jsonBool :: Parser JSON
+jsonBool = (JSONBool True <$ string "true") <|> (JSONBool False <$ string "false")
+
 
 
 data Assertion a = Pass | Fail a deriving (Show, Eq)
@@ -23,5 +30,7 @@ testParse :: [Assertion String]
 testParse =
     foldr (\a acc -> if a == Pass then acc else a:acc) [] [
         assertEqual "Expected \"\" to yield empty string" (parseJSON "\"\"") (Right (JSONString "")),
-        assertEqual "Expected \"abc\" to yield a string" (parseJSON "\"abc\"") (Right (JSONString "abc"))
+        assertEqual "Expected \"abc\" to yield a string" (parseJSON "\"abc\"") (Right (JSONString "abc")),
+        assertEqual "Expected true to yield a boolean" (parseJSON "true") (Right (JSONBool True)),
+        assertEqual "Expected false to yield a boolean" (parseJSON "false") (Right (JSONBool False))
     ]
