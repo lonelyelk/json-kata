@@ -18,6 +18,7 @@ This is a personal exercise repository, where I learn programming languages by w
 - [ ] Restrict unescaped characters within string
 - [ ] Difference between empty array and empty object – difference between arrays and objects
 - [ ] Implement parsing to maps
+- [ ] Split test cases from the module
 
 ## Haskell
 
@@ -31,9 +32,10 @@ This is a personal exercise repository, where I learn programming languages by w
 - [x] Boolean and `null`
 - [ ] Number
 - [x] Array
-- [ ] Error position
+- [x] Error position (Parsec package)
 - [ ] Handle non-unique keys
 - [ ] Restrict unescaped characters within string
 - [x] Difference between empty array and empty object – for Haskell by type
 - [ ] Implement parsing to types
 - [ ] Split test cases from the module
+- [ ] Better test suite setup
