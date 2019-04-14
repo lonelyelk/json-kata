@@ -4,13 +4,18 @@ import Text.Parsec
 import Text.Parsec.String
 import Control.Monad (void)
 
-data JSON = JSONString String | JSONBool Bool | JSONNull | JSONArray [JSON] deriving (Show, Eq)
+data JSON = JSONString String
+          | JSONBool Bool
+          | JSONNull
+          | JSONArray [JSON]
+          | JSONObject [(String, JSON)]
+          deriving (Show, Eq)
 
 parseJSON :: String -> Either ParseError JSON
-parseJSON = parse (whiteSpace *> jsonVal) "json"
+parseJSON = parse (whiteSpace *> jsonValue) "json"
 
-jsonVal :: Parser JSON
-jsonVal = choice [jsonString, jsonBool, jsonNull, jsonArray]
+jsonValue :: Parser JSON
+jsonValue = choice [jsonString, jsonBool, jsonNull, jsonArray, jsonObject]
 
 jsonString :: Parser JSON
 jsonString = JSONString <$> (between (char '"') (char '"') (many (noneOf "\"\\")) <* whiteSpace)
@@ -22,7 +27,16 @@ jsonNull :: Parser JSON
 jsonNull = JSONNull <$ atom "null"
 
 jsonArray :: Parser JSON
-jsonArray = JSONArray <$> (between (whiteSpacedChar '[') (whiteSpacedChar ']') (jsonVal `sepBy` whiteSpacedChar ',') <* whiteSpace)
+jsonArray = JSONArray <$> whiteSpacedBetween '[' ']' (jsonValue `sepBy` whiteSpacedChar ',')
+
+jsonObject :: Parser JSON
+jsonObject = JSONObject <$> whiteSpacedBetween '{' '}' (keyValPair `sepBy` whiteSpacedChar ',')
+    where
+        keyValPair = do
+            JSONString key <- jsonString
+            whiteSpacedChar ':'
+            value <- jsonValue
+            return (key, value)
 
 whiteSpace :: Parser ()
 whiteSpace = void $ many $ oneOf " \n\t\r"
@@ -32,6 +46,10 @@ atom str = string str <* whiteSpace
 
 whiteSpacedChar :: Char -> Parser ()
 whiteSpacedChar ch = char ch *> whiteSpace
+
+whiteSpacedBetween :: Char -> Char -> Parser a -> Parser a
+whiteSpacedBetween start finish values =
+    between (whiteSpacedChar start) (whiteSpacedChar finish) values <* whiteSpace
 
 
 data Assertion a = Pass | Fail a deriving (Show, Eq)
@@ -52,5 +70,6 @@ testParse =
         assertEqual "Expected parser to ignore whitespace boolean" (parseJSON "   true   ") (Right (JSONBool True)),
         assertEqual "Expected null to yield null" (parseJSON "   null   ") (Right JSONNull),
         assertEqual "Expected array to be parsed" (parseJSON " [\nnull, \"qwe\",\t true ] ") (Right (JSONArray [JSONNull, JSONString "qwe", JSONBool True])),
-        assertEqual "Expected array to be parsed" (parseJSON " [\n] ") (Right (JSONArray []))
+        assertEqual "Expected empty array to be parsed" (parseJSON " [\n] ") (Right (JSONArray [])),
+        assertEqual "Expected object to be parsed" (parseJSON " {\n \"key\": [\n\"value\" \n] } ") (Right (JSONObject [("key", JSONArray [JSONString "value"])]))
     ]

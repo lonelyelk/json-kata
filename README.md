@@ -24,7 +24,7 @@ This is a personal exercise repository, where I learn programming languages by w
 
 - [x] Setup
 - [x] Whitespace
-- [ ] Object
+- [x] Object
 - [x] String
 - [ ] Escapes
 - [ ] Utf8
