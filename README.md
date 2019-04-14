@@ -27,7 +27,7 @@ This is a personal exercise repository, where I learn programming languages by w
 - [x] Object
 - [x] String
 - [x] Escapes
-- [ ] Utf8
+- [x] Utf8
 - [ ] Utf16
 - [x] Boolean and `null`
 - [ ] Number
