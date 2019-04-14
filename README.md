@@ -30,7 +30,7 @@ This is a personal exercise repository, where I learn programming languages by w
 - [ ] Utf16
 - [x] Boolean and `null`
 - [ ] Number
-- [ ] Array
+- [x] Array
 - [ ] Error position
 - [ ] Handle non-unique keys
 - [ ] Restrict unescaped characters within string

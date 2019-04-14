@@ -4,13 +4,13 @@ import Text.Parsec
 import Text.Parsec.String
 import Control.Monad (void)
 
-data JSON = JSONString String | JSONBool Bool | JSONNull deriving (Show, Eq)
+data JSON = JSONString String | JSONBool Bool | JSONNull | JSONArray [JSON] deriving (Show, Eq)
 
 parseJSON :: String -> Either ParseError JSON
 parseJSON = parse (whiteSpace *> jsonVal) "json"
 
 jsonVal :: Parser JSON
-jsonVal = choice [jsonString, jsonBool, jsonNull]
+jsonVal = choice [jsonString, jsonBool, jsonNull, jsonArray]
 
 jsonString :: Parser JSON
 jsonString = JSONString <$> (between (char '"') (char '"') (many (noneOf "\"\\")) <* whiteSpace)
@@ -20,6 +20,9 @@ jsonBool = (JSONBool True <$ (string "true" <* whiteSpace)) <|> (JSONBool False 
 
 jsonNull :: Parser JSON
 jsonNull = JSONNull <$ (string "null" <* whiteSpace)
+
+jsonArray :: Parser JSON
+jsonArray = JSONArray <$> (between (char '[' *> whiteSpace) (char ']' *> whiteSpace) (jsonVal `sepBy` (char ',' *> whiteSpace)) <* whiteSpace)
 
 whiteSpace :: Parser ()
 whiteSpace = void $ many $ oneOf " \n\t\r"
@@ -41,5 +44,6 @@ testParse =
         assertEqual "Expected false to yield a boolean" (parseJSON "false") (Right (JSONBool False)),
         assertEqual "Expected parser to ignore whitespace string" (parseJSON "   \"abc\"   ") (Right (JSONString "abc")),
         assertEqual "Expected parser to ignore whitespace boolean" (parseJSON "   true   ") (Right (JSONBool True)),
-        assertEqual "Expected null to yeald null" (parseJSON "   null   ") (Right JSONNull)
+        assertEqual "Expected null to yield null" (parseJSON "   null   ") (Right JSONNull),
+        assertEqual "Expected array to be parsed" (parseJSON " [\nnull, \"qwe\",\t true ] ") (Right (JSONArray [JSONNull, JSONString "qwe", JSONBool True]))
     ]
