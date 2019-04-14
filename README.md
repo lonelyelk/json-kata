@@ -34,6 +34,6 @@ This is a personal exercise repository, where I learn programming languages by w
 - [ ] Error position
 - [ ] Handle non-unique keys
 - [ ] Restrict unescaped characters within string
-- [ ] Difference between empty array and empty object – difference between arrays and objects
-- [ ] Implement parsing to maps
+- [x] Difference between empty array and empty object – for Haskell by type
+- [ ] Implement parsing to types
 - [ ] Split test cases from the module

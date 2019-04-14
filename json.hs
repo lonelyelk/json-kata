@@ -51,5 +51,6 @@ testParse =
         assertEqual "Expected parser to ignore whitespace string" (parseJSON "   \"abc\"   ") (Right (JSONString "abc")),
         assertEqual "Expected parser to ignore whitespace boolean" (parseJSON "   true   ") (Right (JSONBool True)),
         assertEqual "Expected null to yield null" (parseJSON "   null   ") (Right JSONNull),
-        assertEqual "Expected array to be parsed" (parseJSON " [\nnull, \"qwe\",\t true ] ") (Right (JSONArray [JSONNull, JSONString "qwe", JSONBool True]))
+        assertEqual "Expected array to be parsed" (parseJSON " [\nnull, \"qwe\",\t true ] ") (Right (JSONArray [JSONNull, JSONString "qwe", JSONBool True])),
+        assertEqual "Expected array to be parsed" (parseJSON " [\n] ") (Right (JSONArray []))
     ]
