@@ -2,21 +2,24 @@ module JSON (JSON(..), parseJSON) where
 
 import Text.Parsec
 import Text.Parsec.String
+import Control.Monad (void)
 
 data JSON = JSONString String | JSONBool Bool deriving (Show, Eq)
 
 parseJSON :: String -> Either ParseError JSON
-parseJSON = parse jsonVal "json"
+parseJSON = parse (whiteSpace *> jsonVal) "json"
 
 jsonVal :: Parser JSON
 jsonVal = choice [jsonString, jsonBool]
 
 jsonString :: Parser JSON
-jsonString = JSONString <$> between (char '"') (char '"') (many (noneOf "\"\\"))
+jsonString = JSONString <$> (between (char '"') (char '"') (many (noneOf "\"\\")) <* whiteSpace)
 
 jsonBool :: Parser JSON
-jsonBool = (JSONBool True <$ string "true") <|> (JSONBool False <$ string "false")
+jsonBool = (JSONBool True <$ (string "true" <* whiteSpace)) <|> (JSONBool False <$ (string "false" <* whiteSpace))
 
+whiteSpace :: Parser ()
+whiteSpace = void $ many $ oneOf " \n\t\r"
 
 
 data Assertion a = Pass | Fail a deriving (Show, Eq)
@@ -32,5 +35,7 @@ testParse =
         assertEqual "Expected \"\" to yield empty string" (parseJSON "\"\"") (Right (JSONString "")),
         assertEqual "Expected \"abc\" to yield a string" (parseJSON "\"abc\"") (Right (JSONString "abc")),
         assertEqual "Expected true to yield a boolean" (parseJSON "true") (Right (JSONBool True)),
-        assertEqual "Expected false to yield a boolean" (parseJSON "false") (Right (JSONBool False))
+        assertEqual "Expected false to yield a boolean" (parseJSON "false") (Right (JSONBool False)),
+        assertEqual "Expected parser to ignore whitespace string" (parseJSON "   \"abc\"   ") (Right (JSONString "abc")),
+        assertEqual "Expected parser to ignore whitespace boolean" (parseJSON "   true   ") (Right (JSONBool True))
     ]
