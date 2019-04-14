@@ -16,16 +16,22 @@ jsonString :: Parser JSON
 jsonString = JSONString <$> (between (char '"') (char '"') (many (noneOf "\"\\")) <* whiteSpace)
 
 jsonBool :: Parser JSON
-jsonBool = (JSONBool True <$ (string "true" <* whiteSpace)) <|> (JSONBool False <$ (string "false" <* whiteSpace))
+jsonBool = (JSONBool True <$ atom "true") <|> (JSONBool False <$ atom "false")
 
 jsonNull :: Parser JSON
-jsonNull = JSONNull <$ (string "null" <* whiteSpace)
+jsonNull = JSONNull <$ atom "null"
 
 jsonArray :: Parser JSON
-jsonArray = JSONArray <$> (between (char '[' *> whiteSpace) (char ']' *> whiteSpace) (jsonVal `sepBy` (char ',' *> whiteSpace)) <* whiteSpace)
+jsonArray = JSONArray <$> (between (whiteSpacedChar '[') (whiteSpacedChar ']') (jsonVal `sepBy` whiteSpacedChar ',') <* whiteSpace)
 
 whiteSpace :: Parser ()
 whiteSpace = void $ many $ oneOf " \n\t\r"
+
+atom :: String -> Parser String
+atom str = string str <* whiteSpace
+
+whiteSpacedChar :: Char -> Parser ()
+whiteSpacedChar ch = char ch *> whiteSpace
 
 
 data Assertion a = Pass | Fail a deriving (Show, Eq)
