@@ -22,13 +22,13 @@ This is a personal exercise repository, where I learn programming languages by w
 ## Haskell
 
 - [x] Setup
-- [ ] Whitespace
+- [x] Whitespace
 - [ ] Object
-- [ ] String
+- [x] String
 - [ ] Escapes
 - [ ] Utf8
 - [ ] Utf16
-- [ ] Boolean and `null`
+- [x] Boolean and `null`
 - [ ] Number
 - [ ] Array
 - [ ] Error position
