@@ -18,7 +18,16 @@ jsonValue :: Parser JSON
 jsonValue = choice [jsonString, jsonBool, jsonNull, jsonArray, jsonObject]
 
 jsonString :: Parser JSON
-jsonString = JSONString <$> (between (char '"') (char '"') (many (noneOf "\"\\")) <* whiteSpace)
+jsonString = JSONString <$> (between (char '"') (char '"') (many jsonStringChar) <* whiteSpace)
+    where
+        jsonStringChar = noneOf "\"\\" <|> (char '\\' *> escapedChar)
+        escapedChar = ('\n' <$ char 'n')
+            <|> ('\t' <$ char 't')
+            <|> ('\r' <$ char 'r')
+            <|> ('\b' <$ char 'b')
+            <|> ('\f' <$ char 'f')
+            <|> ('\\' <$ char '\\')
+            <|> ('"' <$ char '"')
 
 jsonBool :: Parser JSON
 jsonBool = (JSONBool True <$ atom "true") <|> (JSONBool False <$ atom "false")
@@ -71,5 +80,6 @@ testParse =
         assertEqual "Expected null to yield null" (parseJSON "   null   ") (Right JSONNull),
         assertEqual "Expected array to be parsed" (parseJSON " [\nnull, \"qwe\",\t true ] ") (Right (JSONArray [JSONNull, JSONString "qwe", JSONBool True])),
         assertEqual "Expected empty array to be parsed" (parseJSON " [\n] ") (Right (JSONArray [])),
-        assertEqual "Expected object to be parsed" (parseJSON " {\n \"key\": [\n\"value\" \n] } ") (Right (JSONObject [("key", JSONArray [JSONString "value"])]))
+        assertEqual "Expected object to be parsed" (parseJSON " {\n \"key\": [\n\"value\" \n] } ") (Right (JSONObject [("key", JSONArray [JSONString "value"])])),
+        assertEqual "Expected escaped chars in string to be parsed" (parseJSON " \"\\n\\t \\\\ \\\" \\b\" ") (Right (JSONString "\n\t \\ \" \b"))
     ]
